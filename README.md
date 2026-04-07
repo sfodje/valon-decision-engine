@@ -121,7 +121,7 @@ eliminates the DB round-trip on the hot path entirely.
 
 ## Connection to production
 
-py-roolz powers Shippo's carrier rate engine — a system where 50+ carriers each define
+I developed py-roolz to power the carrier rate engine at Shippo — a system where 50+ carriers each define
 different compliance rules that must be evaluated deterministically at high throughput.
 The auditable decision layer demonstrated here extends that foundation to meet the stricter
 traceability requirements of regulated finance.
