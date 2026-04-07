@@ -85,6 +85,40 @@ GET /decisions?loan_id=loan-001
 PYTHONPATH=src pytest -v
 ```
 
+## Design Decisions
+
+**Immutable append-only records over event sourcing.** Every decision is written once and never
+modified. Event sourcing would add replay infrastructure and derived-state complexity that isn't
+justified here — the DecisionRecord IS the state a regulator needs. Append-only is simpler,
+auditable by default, and maps directly to how compliance teams think about records.
+
+**Rules as versioned data, not versioned code.** Encoding rules as JSON stored in the database
+means compliance teams can inspect exactly what rules were active at any point in time without
+reading a codebase. It also makes rule changes a data operation (deploy a new version, not a new
+binary), which is safer in a regulated environment where rule changes need change-management
+approval trails.
+
+**Stateless rule evaluation.** `evaluate()` takes all inputs explicitly and produces a
+deterministic output. No hidden state, no side effects beyond the audit record. This makes the
+evaluation layer horizontally scalable and trivially testable — properties that matter when you're
+running millions of decisions per day across a $110B loan portfolio.
+
+**SQLite for the demo.** In production, the `decisions` table is append-only and grows
+indefinitely — the right production choice is Postgres with time-based partitioning (by month or
+quarter) so audit queries against current data stay fast. The `loan_id` index also becomes
+critical at scale; it's intentionally absent here to keep the demo dependency-free.
+
+## At Scale
+
+The evaluation path (rule lookup → fact construction → roolz execution → record write) is
+stateless and CPU-bound — it scales horizontally behind a load balancer with no coordination
+overhead. The bottleneck at volume is the audit write path: at 1M+ decisions/day, batching
+inserts and writing to a partitioned Postgres table with an async worker keeps p99 latency
+stable. The audit read path (`GET /decisions?loan_id=X`) is read-heavy and cacheable — a Redis
+layer in front of the DB handles burst traffic during regulatory reviews without touching the
+primary. Rule sets themselves change rarely and are small; caching the current version in-process
+eliminates the DB round-trip on the hot path entirely.
+
 ## Connection to production
 
 py-roolz powers Shippo's carrier rate engine — a system where 50+ carriers each define
