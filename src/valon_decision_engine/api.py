@@ -1,0 +1,71 @@
+"""FastAPI application for the Valon Decision Engine."""
+
+import os
+
+from fastapi import FastAPI, HTTPException, Query
+
+from valon_decision_engine.engine import (
+    DecisionNotFoundError,
+    evaluate,
+    get_decision,
+    get_decisions_for_loan,
+)
+from valon_decision_engine.models import DecisionResponse, EvaluateRequest
+from valon_decision_engine.rule_store import RuleSetNotFoundError
+
+app = FastAPI(title="Valon Decision Engine")
+
+
+def _db() -> str:
+    return os.environ.get("DB_PATH", "decisions.db")
+
+
+@app.post("/decisions", response_model=DecisionResponse)
+def post_decision(request: EvaluateRequest):
+    """Evaluate a rule set against a loan fact and record the decision."""
+    try:
+        record = evaluate(_db(), request.rule_set_id, request.fact, request.loan_id)
+    except RuleSetNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return DecisionResponse(
+        decision_id=record.decision_id,
+        rule_set_id=record.rule_set_id,
+        rule_set_version=record.rule_set_version,
+        loan_id=record.loan_id,
+        actions_taken=record.actions_taken,
+        timestamp=record.timestamp,
+    )
+
+
+@app.get("/decisions/{decision_id}", response_model=DecisionResponse)
+def fetch_decision(decision_id: str):
+    """Retrieve the full audit record for a single decision."""
+    try:
+        record = get_decision(_db(), decision_id)
+    except DecisionNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return DecisionResponse(
+        decision_id=record.decision_id,
+        rule_set_id=record.rule_set_id,
+        rule_set_version=record.rule_set_version,
+        loan_id=record.loan_id,
+        actions_taken=record.actions_taken,
+        timestamp=record.timestamp,
+    )
+
+
+@app.get("/decisions", response_model=list[DecisionResponse])
+def list_decisions(loan_id: str = Query(..., description="Filter decisions by loan ID")):
+    """Retrieve the full decision history for a loan."""
+    records = get_decisions_for_loan(_db(), loan_id)
+    return [
+        DecisionResponse(
+            decision_id=r.decision_id,
+            rule_set_id=r.rule_set_id,
+            rule_set_version=r.rule_set_version,
+            loan_id=r.loan_id,
+            actions_taken=r.actions_taken,
+            timestamp=r.timestamp,
+        )
+        for r in records
+    ]
