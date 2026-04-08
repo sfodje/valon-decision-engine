@@ -8,7 +8,7 @@ from valon_decision_engine.rule_store import (
 
 SAMPLE_RULES = [
     {
-        "condition": {"all": [{"fact": "has_hardship_flag", "operator": "is_true"}]},
+        "condition": {"all": [{"fact": "has_hardship", "operator": "is_true"}]},
         "actions": [{"method": "waive_late_fee"}],
     }
 ]

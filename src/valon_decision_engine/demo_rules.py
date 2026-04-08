@@ -16,7 +16,7 @@ LATE_FEE_WAIVER_RULES = [
     {
         "condition": {
             "all": [
-                {"fact": "has_hardship_flag", "operator": "is_true"},
+                {"fact": "has_hardship", "operator": "is_true"},
                 {
                     "fact": "get_days_late",
                     "operator": "less_than_or_equal_to",

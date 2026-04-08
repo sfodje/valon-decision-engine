@@ -23,6 +23,13 @@ class DecisionRecord(BaseModel):
     timestamp: str
 
 
+class CreateRuleSetRequest(BaseModel):
+    """Request to create a new version of a rule set."""
+
+    rule_set_id: str
+    rules: list[dict]
+
+
 class EvaluateRequest(BaseModel):
     """Request to evaluate a rule set against a fact set."""
 

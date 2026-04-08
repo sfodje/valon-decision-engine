@@ -1,0 +1,119 @@
+### Base URL
+@base = http://localhost:8000
+
+### -------------------------------------------------------
+### Create a rule set (returns version number)
+### -------------------------------------------------------
+POST {{base}}/rule-sets
+Content-Type: application/json
+
+{
+  "rule_set_id": "late_fee_waiver",
+  "rules": [
+    {
+      "condition": {
+        "all": [
+          {"fact": "has_hardship", "operator": "is_true"},
+          {"fact": "get_days_late", "operator": "less_than_or_equal_to", "value": 30}
+        ]
+      },
+      "actions": [{"action": "waive_late_fee"}]
+    },
+    {
+      "condition": {"fact": "get_days_late", "operator": "greater_than", "value": 30},
+      "actions": [{"action": "flag_for_manual_review"}]
+    }
+  ]
+}
+
+### -------------------------------------------------------
+### Create a rule set — payment allocation
+### -------------------------------------------------------
+POST {{base}}/rule-sets
+Content-Type: application/json
+
+{
+  "rule_set_id": "payment_allocation",
+  "rules": [
+    {
+      "condition": {
+        "fact": "get_days_until_tax_payment",
+        "operator": "less_than_or_equal_to",
+        "value": 30
+      },
+      "actions": [{"action": "allocate_to_escrow_first"}]
+    }
+  ]
+}
+
+### -------------------------------------------------------
+### Evaluate a decision — late fee waiver (waived)
+### -------------------------------------------------------
+POST {{base}}/decisions
+Content-Type: application/json
+
+{
+  "rule_set_id": "late_fee_waiver",
+  "loan_id": "loan-001",
+  "fact": {
+    "has_hardship": true,
+    "days_late": 15
+  }
+}
+
+### -------------------------------------------------------
+### Evaluate a decision — late fee waiver (manual review)
+### -------------------------------------------------------
+POST {{base}}/decisions
+Content-Type: application/json
+
+{
+  "rule_set_id": "late_fee_waiver",
+  "loan_id": "loan-001",
+  "fact": {
+    "has_hardship": false,
+    "days_late": 45
+  }
+}
+
+### -------------------------------------------------------
+### Evaluate a decision — payment allocation
+### -------------------------------------------------------
+POST {{base}}/decisions
+Content-Type: application/json
+
+{
+  "rule_set_id": "payment_allocation",
+  "loan_id": "loan-002",
+  "fact": {
+    "days_until_tax_payment": 20
+  }
+}
+
+### -------------------------------------------------------
+### Evaluate a decision — unknown rule set (404)
+### -------------------------------------------------------
+POST {{base}}/decisions
+Content-Type: application/json
+
+{
+  "rule_set_id": "does_not_exist",
+  "loan_id": "loan-001",
+  "fact": {}
+}
+
+### -------------------------------------------------------
+### Fetch a single decision by ID
+### Replace <decision_id> with an ID from a POST response
+### -------------------------------------------------------
+GET {{base}}/decisions/<decision_id>
+
+### -------------------------------------------------------
+### Fetch a single decision — unknown ID (404)
+### -------------------------------------------------------
+GET {{base}}/decisions/00000000-0000-0000-0000-000000000000
+
+### -------------------------------------------------------
+### List all decisions for a loan
+### -------------------------------------------------------
+GET {{base}}/decisions?loan_id=loan-001

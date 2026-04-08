@@ -1,6 +1,8 @@
 """FastAPI application for the Valon Decision Engine."""
 
 import os
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 from fastapi import FastAPI, HTTPException, Query
 
@@ -10,14 +12,29 @@ from valon_decision_engine.engine import (
     get_decision,
     get_decisions_for_loan,
 )
-from valon_decision_engine.models import DecisionResponse, EvaluateRequest
-from valon_decision_engine.rule_store import RuleSetNotFoundError
+from valon_decision_engine.database import init_db
+from valon_decision_engine.models import CreateRuleSetRequest, DecisionResponse, EvaluateRequest
+from valon_decision_engine.rule_store import RuleSetNotFoundError, save_rule_set
 
-app = FastAPI(title="Valon Decision Engine")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    init_db(_db())
+    yield
+
+
+app = FastAPI(title="Valon Decision Engine", lifespan=lifespan)
 
 
 def _db() -> str:
     return os.environ.get("DB_PATH", "decisions.db")
+
+
+@app.post("/rule-sets", response_model=dict, status_code=201)
+def create_rule_set(request: CreateRuleSetRequest) -> dict:
+    """Create a new version of a rule set."""
+    version = save_rule_set(_db(), request.rule_set_id, request.rules)
+    return {"rule_set_id": request.rule_set_id, "version": version}
 
 
 @app.post("/decisions", response_model=DecisionResponse)

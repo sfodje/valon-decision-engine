@@ -9,7 +9,7 @@ WAIVER_RULES = [
     {
         "condition": {
             "all": [
-                {"fact": "has_hardship_flag", "operator": "is_true"},
+                {"fact": "has_hardship", "operator": "is_true"},
                 {
                     "fact": "get_days_late",
                     "operator": "less_than_or_equal_to",
@@ -97,6 +97,25 @@ def test_get_decision_by_id(seeded_client):
 def test_get_decision_returns_404_for_unknown_id(client):
     response = client.get("/decisions/nonexistent-id")
     assert response.status_code == 404
+
+
+def test_post_rule_sets_returns_201(client):
+    response = client.post(
+        "/rule-sets",
+        json={"rule_set_id": "my_rules", "rules": [{"condition": {"fact": "x", "operator": "is_true"}, "actions": [{"action": "do_thing"}]}]},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["rule_set_id"] == "my_rules"
+    assert data["version"] == 1
+
+
+def test_post_rule_sets_increments_version(client):
+    rules = [{"condition": {"fact": "x", "operator": "is_true"}, "actions": [{"action": "do_thing"}]}]
+    client.post("/rule-sets", json={"rule_set_id": "my_rules", "rules": rules})
+    response = client.post("/rule-sets", json={"rule_set_id": "my_rules", "rules": rules})
+    assert response.status_code == 201
+    assert response.json()["version"] == 2
 
 
 def test_get_decisions_by_loan_id(seeded_client):
