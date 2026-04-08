@@ -1,4 +1,8 @@
-from valon_decision_engine.loan_domain import LoanFact, DecisionActor, loan_fact_from_dict
+from valon_decision_engine.loan_domain import (
+    DecisionActor,
+    LoanFact,
+    loan_fact_from_dict,
+)
 
 
 def test_loan_fact_methods():

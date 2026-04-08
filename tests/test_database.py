@@ -1,6 +1,6 @@
 import sqlite3
-import pytest
-from valon_decision_engine.database import init_db, get_connection
+
+from valon_decision_engine.database import get_connection, init_db
 
 
 def test_init_db_creates_rule_sets_table(tmp_path):

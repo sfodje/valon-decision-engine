@@ -1,10 +1,10 @@
-import pytest
 from datetime import datetime, timezone
+
 from valon_decision_engine.models import (
-    RuleSetRecord,
     DecisionRecord,
-    EvaluateRequest,
     DecisionResponse,
+    EvaluateRequest,
+    RuleSetRecord,
 )
 
 

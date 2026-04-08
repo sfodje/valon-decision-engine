@@ -1,14 +1,18 @@
 import pytest
-from valon_decision_engine.engine import evaluate, get_decision, DecisionNotFoundError
-from valon_decision_engine.rule_store import save_rule_set
 
+from valon_decision_engine.engine import DecisionNotFoundError, evaluate, get_decision
+from valon_decision_engine.rule_store import save_rule_set
 
 WAIVER_RULES = [
     {
         "condition": {
             "all": [
                 {"fact": "has_hardship_flag", "operator": "is_true"},
-                {"fact": "get_days_late", "operator": "less_than_or_equal_to", "value": 30},
+                {
+                    "fact": "get_days_late",
+                    "operator": "less_than_or_equal_to",
+                    "value": 30,
+                },
             ]
         },
         "actions": [{"action": "waive_late_fee"}],

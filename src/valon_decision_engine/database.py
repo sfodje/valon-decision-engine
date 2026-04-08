@@ -1,6 +1,8 @@
 """Database initialization module."""
+
 import sqlite3
 from contextlib import contextmanager
+from typing import Generator
 
 
 def init_db(db_path: str) -> None:
@@ -33,7 +35,7 @@ def init_db(db_path: str) -> None:
 
 
 @contextmanager
-def get_connection(db_path: str):
+def get_connection(db_path: str) -> Generator[sqlite3.Connection, None, None]:
     """Yield a sqlite3 connection with Row factory set.
 
     Args:

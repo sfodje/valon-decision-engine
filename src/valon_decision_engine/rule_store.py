@@ -1,12 +1,14 @@
 """Rule store for versioned immutable rule sets."""
 
 import json
+
 from valon_decision_engine.database import get_connection
 from valon_decision_engine.models import RuleSetRecord
 
 
 class RuleSetNotFoundError(Exception):
     """Raised when a rule set or version cannot be found."""
+
     pass
 
 

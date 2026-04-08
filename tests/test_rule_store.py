@@ -1,6 +1,10 @@
 import pytest
-from valon_decision_engine.rule_store import save_rule_set, get_rule_set, RuleSetNotFoundError
 
+from valon_decision_engine.rule_store import (
+    RuleSetNotFoundError,
+    get_rule_set,
+    save_rule_set,
+)
 
 SAMPLE_RULES = [
     {

@@ -9,15 +9,19 @@ late_fee_waiver:
 payment_allocation:
     When a tax payment is due within 30 days, allocate to escrow first.
 """
-from valon_decision_engine.rule_store import save_rule_set
 
+from valon_decision_engine.rule_store import save_rule_set
 
 LATE_FEE_WAIVER_RULES = [
     {
         "condition": {
             "all": [
                 {"fact": "has_hardship_flag", "operator": "is_true"},
-                {"fact": "get_days_late", "operator": "less_than_or_equal_to", "value": 30},
+                {
+                    "fact": "get_days_late",
+                    "operator": "less_than_or_equal_to",
+                    "value": 30,
+                },
             ]
         },
         "actions": [{"action": "waive_late_fee"}],

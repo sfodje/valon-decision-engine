@@ -8,8 +8,10 @@ Demonstrates:
   2. Evaluating decisions and recording immutable audit trails
   3. Querying the full decision history for a loan
 """
+
 import json
 import os
+
 from valon_decision_engine.database import init_db
 from valon_decision_engine.demo_rules import seed_demo_rules
 from valon_decision_engine.engine import evaluate, get_decisions_for_loan
@@ -18,9 +20,9 @@ DB_PATH = "demo.db"
 
 
 def header(title: str) -> None:
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  {title}")
-    print('='*60)
+    print("=" * 60)
 
 
 def run():
@@ -52,7 +54,9 @@ def run():
         loan_id=loan_id,
     )
     print(f"  decision_id:      {result.decision_id}")
-    print(f"  actions_taken:    {result.actions_taken}  (no waiver — condition not met)")
+    print(
+        f"  actions_taken:    {result.actions_taken}  (no waiver — condition not met)"
+    )
 
     header("Scenario 3: Late fee waiver — 45 days late (manual review triggered)")
     result = evaluate(

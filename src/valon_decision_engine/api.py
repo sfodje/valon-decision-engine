@@ -21,7 +21,7 @@ def _db() -> str:
 
 
 @app.post("/decisions", response_model=DecisionResponse)
-def post_decision(request: EvaluateRequest):
+def post_decision(request: EvaluateRequest) -> DecisionResponse:
     """Evaluate a rule set against a loan fact and record the decision."""
     try:
         record = evaluate(_db(), request.rule_set_id, request.fact, request.loan_id)
@@ -38,7 +38,7 @@ def post_decision(request: EvaluateRequest):
 
 
 @app.get("/decisions/{decision_id}", response_model=DecisionResponse)
-def fetch_decision(decision_id: str):
+def fetch_decision(decision_id: str) -> DecisionResponse:
     """Retrieve the full audit record for a single decision."""
     try:
         record = get_decision(_db(), decision_id)
@@ -55,7 +55,9 @@ def fetch_decision(decision_id: str):
 
 
 @app.get("/decisions", response_model=list[DecisionResponse])
-def list_decisions(loan_id: str = Query(..., description="Filter decisions by loan ID")):
+def list_decisions(
+    loan_id: str = Query(..., description="Filter decisions by loan ID"),
+) -> list[DecisionResponse]:
     """Retrieve the full decision history for a loan."""
     records = get_decisions_for_loan(_db(), loan_id)
     return [

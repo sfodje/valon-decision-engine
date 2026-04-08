@@ -1,4 +1,5 @@
 import pytest
+
 from valon_decision_engine.database import init_db
 
 
