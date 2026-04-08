@@ -2,9 +2,8 @@
 
 A demonstration of auditable, versioned rule evaluation for regulated financial decisions.
 
-Built on [py-roolz](https://github.com/sfodje/py-roolz) — a production rule engine originally
-built for carrier compliance at Shippo, where rules from external authorities (carriers) must be
-evaluated deterministically with a full audit trail.
+Built on [py-roolz](https://github.com/sfodje/py-roolz) — a production rule engine for evaluating
+rules from external authorities deterministically with a full audit trail.
 
 ValonOS faces the same pattern at a different scale: mortgage regulations as the rule authority,
 AI agents as the actors, and regulators as the auditors. This is the infrastructure layer that
@@ -31,13 +30,13 @@ Python 3.11, FastAPI, [py-roolz](https://github.com/sfodje/py-roolz), Pydantic v
 ## Setup
 
 ```bash
-pip install -r requirements.txt
+make install
 ```
 
 ## Run the demo
 
 ```bash
-PYTHONPATH=src python demo.py
+make demo
 ```
 
 Runs four mortgage scenarios (late fee waiver, payment allocation) and prints the full audit trail.
@@ -45,19 +44,28 @@ Runs four mortgage scenarios (late fee waiver, payment allocation) and prints th
 ## Run the API
 
 ```bash
-# Initialize the database and seed demo rule sets
+make run
+```
+
+The database is initialized automatically on startup. To pre-seed demo rule sets:
+
+```bash
 PYTHONPATH=src python -c "
-from valon_decision_engine.database import init_db
 from valon_decision_engine.demo_rules import seed_demo_rules
-init_db('decisions.db')
 seed_demo_rules('decisions.db')
 "
-
-# Start the server
-PYTHONPATH=src uvicorn valon_decision_engine.api:app --reload
 ```
 
 ### API endpoints
+
+**Create a rule set:**
+```
+POST /rule-sets
+{
+  "rule_set_id": "late_fee_waiver",
+  "rules": [...]
+}
+```
 
 **Evaluate a rule set:**
 ```
@@ -69,6 +77,8 @@ POST /decisions
 }
 ```
 
+`days_until_tax_payment` is optional — only required for rule sets that reference it.
+
 **Retrieve a decision audit record:**
 ```
 GET /decisions/{decision_id}
@@ -79,10 +89,13 @@ GET /decisions/{decision_id}
 GET /decisions?loan_id=loan-001
 ```
 
+See `requests.http` at the repo root for a full collection of ready-to-run requests.
+
 ## Run tests
 
 ```bash
-PYTHONPATH=src pytest -v
+make test        # run tests
+make check       # format, lint, and typecheck
 ```
 
 ## Design Decisions
@@ -121,7 +134,7 @@ eliminates the DB round-trip on the hot path entirely.
 
 ## Connection to production
 
-I developed py-roolz to power the carrier rate engine at Shippo — a system where 50+ carriers each define
-different compliance rules that must be evaluated deterministically at high throughput.
+py-roolz was originally built to evaluate compliance rules from external authorities at high
+throughput — a context where determinism and auditability are non-negotiable.
 The auditable decision layer demonstrated here extends that foundation to meet the stricter
 traceability requirements of regulated finance.
